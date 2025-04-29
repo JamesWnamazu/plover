@@ -1,0 +1,19 @@
+{% macro render_comment(comment, comments) %}
+    <div class="comment" style="margin-left: {{ 20 * comment.level }}px;">
+        <p>{{ comment.comment }}</p>
+        {% if comment.image %}
+            <img src="{{ comment.image }}" style="max-width: 200px;"><br>
+        {% endif %}
+        <small><em>Posted at {{ comment.timestamp }}</em></small>
+
+        <form class="reply-form" data-parent-id="{{ comment.id }}" enctype="multipart/form-data">
+            <textarea name="comment" placeholder="Reply..." required></textarea>
+            <input type="file" name="image">
+            <button type="submit">Reply</button>
+        </form>
+
+        {% for reply in comments if reply.parent_id == comment.id %}
+            {{ render_comment(reply, comments) }}
+        {% endfor %}
+    </div>
+{% endmacro %}

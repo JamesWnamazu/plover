@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ board_name.title() }} - Plover</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        body { background-color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
+        header { background-color: #222; color: white; text-align: center; padding: 20px; }
+        h1 { margin: 0; }
+        main { padding: 20px; max-width: 800px; margin: auto; }
+        .thread, .comment { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .comment { margin-left: 20px; background-color: #f1f1f1; }
+        form { margin-bottom: 30px; }
+        input, textarea { width: 100%; margin-top: 10px; padding: 8px; }
+        button { padding: 8px 15px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ board_name.title() }}</h1>
+    </header>
+    <main>
+        <h2>Create a New Thread</h2>
+        <form id="threadForm" method="POST" enctype="multipart/form-data" action="/api/thread/{{ board_name }}">
+            <input type="text" name="title" placeholder="Title" required><br>
+            <textarea name="content" placeholder="Your post" required></textarea><br>
+            <input type="file" name="image"><br>
+            <button type="submit">Post Thread</button>
+        </form>
+        
+        <h2>Current Threads</h2>
+        <!--
+        {% for thread in threads %}
+            <div class="thread">
+                <h3><a href="/{{ board_name }}/thread/{{ thread.id }}">{{ thread.title }}</a></h3>
+                <p>{{ thread.content }}</p>
+                {% if thread.image %}
+                    <img src="{{ thread.image }}" style="max-width: 300px;"><br>
+                {% endif %}
+                <p><em>Posted at {{ thread.created_at }}</em></p>
+
+                {% for comment in thread.comments %}
+                    <div class="comment">
+                        <p>{{ comment.comment }}</p>
+                        {% if comment.image %}
+                            <img src="{{ comment.image }}" style="max-width: 200px;"><br>
+                        {% endif %}
+                    <small><em>Posted at {{ comment.timestamp }}</em></small>
+            </div>
+        {$ else %}
+            <p>No threads yet.</p>
+        {% endfor %}
+
+        <form method="POST" enctype="multipart/form-data" action="/api/thread/{{ thread.id }}/comment">
+            <textarea name="comment" rows="2" placeholder="Add a comment..." required></textarea>
+            <input type="file" name="image" accept="image/*">
+            <button type="submit">Reply</button>
+        </form>
+    </div>
+{% endfor %}
+-->
+
+        
+        <div id="threads-container"></div>
+        
+    </main>
+    
+    <script>
+        const boardName = "{{ board_name }}";
+    
+        async function loadThreads() {
+            const res = await fetch(`/api/threads/${boardName}`);
+            const threads = await res.json();
+            const container = document.getElementById('threads-container');
+            container.innerHTML = '';
+            threads.forEach(thread => {
+                const threadEl = document.createElement('div');
+                threadEl.className = 'thread';
+                threadEl.innerHTML = `
+                    <h3><a href="/${thread.board}/thread/${thread.id}">${thread.title}</a></h3>
+                    <p>${thread.content}</p>
+                    ${thread.image ? `<img src="${thread.image}" style="max-width: 300px;"><br>` : ''}
+                    <p><em>Posted at ${thread.created_at || 'unknown time'}</em></p>
+                    <div id="comments-${thread.id}"></div>
+                    <form id="reply-form-${thread.image}" onsubmit="postComment(event, ${thread.id})">
+                        <textarea name="comment" rows="2" placeholder="Add a comment..." required></textarea>
+                        <input type="file" name="image" accept="image/*">
+                        <button type="submit">Reply</button>
+                    </form>
+                `;
+                thread.comments.forEach(comment => {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'comment';
+                    commentEl.innerHTML = `
+                        <p>${comment.comment}</p>
+                        ${comment.image ? `<img src="${comment.image}" style="max-width: 200px;">` : ''}
+                        <br><small><em>Posted at ${comment.timestamp || 'unknown time'}</em></small>
+                        
+                    `;
+                    threadEl.querySelector(`#comments-${thread.id}`).appendChild(commentEl);
+                });
+                container.appendChild(threadEl);
+            });
+        }
+    
+        async function postThread(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+    
+            const res = await fetch(`/api/thread/${boardName}`, {
+                method: 'POST',
+                body: formData
+            });
+    
+            if (res.ok) {
+                form.reset();
+                loadThreads();
+            } else {
+                alert("Failed to post thread");
+            }
+        }
+    
+        async function postComment(event, threadId) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+    
+            await fetch(`/api/thread/${threadId}/comment`, {
+                method: 'POST',
+                body: formData
+            });
+    
+            form.reset();
+            loadThreads();
+        }
+    
+        document.getElementById('threadForm').addEventListener('submit', postThread);
+        loadThreads();
+
+        function scrollToReply(threadId) {
+            const form = document.getElementById(`reply-form-${threadId}`);
+            if (form) {
+                form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                form.querySelector('textarea').focus();
+        }
+        }
+    </script>
+    
+</body>
+</html>

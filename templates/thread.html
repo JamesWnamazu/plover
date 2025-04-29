@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ board_name.title() }} - Plover</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        body { background-color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
+        header { background-color: #222; color: white; text-align: center; padding: 20px; }
+        h1 { margin: 0; }
+        main { padding: 20px; max-width: 950px; margin: auto; }
+        .thread, .comment { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .comment { background-color: #f1f1f1; }
+        form { margin-bottom: 30px; }
+        input, textarea { width: 100%; margin-top: 10px; padding: 8px; }
+        button { padding: 8px 15px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ board_name.title() }}</h1>
+    </header>
+    <main>
+        <h1>{{ thread.title }}</h1>
+        <p>{{ thread.content }}</p>
+        {% if thread.image %}
+            <img src="{{ thread.image }}" style="max-width: 100%;">
+        {% endif %}
+        <p><em>Posted at {{ thread.created_at }}</em></p>
+
+        <hr>
+        <h3>Comments</h3>
+        {% import 'macros.html' as macros %}
+        <div id="comments">
+            {% for comment in thread.comments if comment.parent_id is none %}
+                {{ macros.render_comment(comment, thread.comments) }}
+            {% endfor %}
+        </div>
+
+        <hr>
+        <h3>Add a Reply</h3>
+        <form id="commentForm" enctype="multipart/form-data">
+            <textarea name="comment" placeholder="Your reply" required></textarea><br>
+            <input type="file" name="image"><br>
+            <button type="submit">Post Reply</button>
+        </form>
+    </main>
+
+    <script>
+        const threadId = "{{ thread.id }}";
+
+        // Top-level comment form
+        document.getElementById('commentForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            const res = await fetch(`/api/thread/${threadId}/comment`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                location.reload();
+            } else {
+                alert("Failed to post comment");
+            }
+        });
+
+        // Nested reply forms
+        document.querySelectorAll('.reply-form').forEach(form => {
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const parentId = form.dataset.parentId;
+                formData.append('parent_id', parentId);
+
+                const res = await fetch(`/api/thread/${threadId}/comment`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    alert("Failed to post reply");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
