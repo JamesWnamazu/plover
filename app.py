@@ -7,15 +7,16 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-# In-memory "database"
+# In-memory database
 threads = []
 thread_id_counter = 1
 reply_id_counter = 1
 
-# File upload settings
+# Allowed file extensions 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+# Valid boards by category 
 valid_boards = {
     'entertainment': ['anime', 'sports', 'videogames'],
     'study': ['tech', 'math', 'history'],
@@ -58,15 +59,14 @@ def show_board(category, board_name):
     )
     return render_template('board.html', board_name=board_name, category=category)
 
-# All threads stored like { 'board': 'anime', ... }
-threads = []
-
+# Helps build boards by listing threads
 @app.route('/api/threads/<board_name>', methods=['GET'])
 def get_threads(board_name):
     board_threads = [t for t in threads if t['board'] == board_name]
     sorted_threads = sorted(board_threads, key=lambda x: x['last_activity'], reverse=True)
     return jsonify(sorted_threads)
 
+# Helps build new thread
 @app.route('/api/thread/<board_name>', methods=['POST'])
 def create_thread(board_name):
     global thread_id_counter
@@ -94,16 +94,9 @@ def create_thread(board_name):
     thread_id_counter += 1
     
     return jsonify({'status': 'success'}), 201
-    '''
-    category = get_category_from_board(board_name)
-    if not category:
-        return "Invalid board", 400
-
-    return redirect(url_for('show_board', category=category, board_name=board_name))
-    '''
 
 
-
+# Adds replies to threads
 @app.route('/api/thread/<int:thread_id>/comment', methods=['POST'])
 def add_comment(thread_id):
     global reply_id_counter
@@ -132,7 +125,7 @@ def add_comment(thread_id):
 
     return jsonify({'error': 'Thread not found'}), 404
 
-
+# manages comment levels (i.e top level, vs sub-level)
 def annotate_comment_levels(comments):
     def set_levels(comments, parent_id=None, level=0):
         for comment in comments:
@@ -154,7 +147,3 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
 
 
-'''
-if __name__ == '__main__':
-    app.run(debug=True)
-'''
