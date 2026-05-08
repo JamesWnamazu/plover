@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Plover - Imageboard</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', path='favicon.ico') }}" type="image/x-icon">
     <style>
         body {
             background-color: #f9f9f9;
@@ -77,7 +77,7 @@
 <body>
 
 <header>
-    <img src="{{ url_for('static', filename='images/bird.png') }}" alt="Plover">
+    <img src="{{ url_for('static', path='images/bird.png') }}" alt="Plover">
     <h1>Plover</h1>
 </header>
 
