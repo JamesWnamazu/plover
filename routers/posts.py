@@ -1,9 +1,21 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
-from database import get_session
+from db import get_session
 from models.post import Post
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
-router = APIRouter(prefix="/api/posts", tags=["posts"])
+router = APIRouter(tags=["posts"])
+
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="main.html",
+        context={}
+    )
 
 @router.get("/{board_name}")
 def get_posts(board_name: str, session: Session = Depends(get_session)):
