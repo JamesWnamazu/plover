@@ -3,7 +3,7 @@
 This repository is for a forum style web site project.
 
 ## **Tools Used** 
-    - FastAPI
+    - FastAPI (formerly Flask)
     - SQLite
 
 ## **How to Run**
