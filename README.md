@@ -1,12 +1,6 @@
 # **About**
 
-Plover is a forum editing and designing program for hosts interested in running, not developing a forum.
-
-## **Planned features** 
-
-    - GUI page editor and preview
-    - Moderation tools
-    - Exportation tools for hosting 
+This repository is for a forum style web site project.
 
 ## **Tools Used** 
     - FastAPI
